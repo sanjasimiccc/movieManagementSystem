@@ -1,0 +1,39 @@
+$kind: http-request
+name: Create Movie
+method: POST
+url: '{{base_url}}/movies/'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "title": "Interstellar",
+      "year": 2014,
+      "genre": "Sci-Fi",
+      "director": "Christopher Nolan",
+      "plot": "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+      "imdb_rating": 8.6
+    }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    - key: Content-Type
+      value: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "id": 3,
+        "title": "Interstellar",
+        "year": 2014,
+        "genre": "Sci-Fi",
+        "director": "Christopher Nolan",
+        "plot": "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+        "imdb_rating": 8.6,
+        "external_id": null,
+        "source": null,
+        "created_at": "2026-03-06T17:00:00Z"
+      }

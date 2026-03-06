@@ -1,0 +1,6 @@
+$kind: collection
+name: Movie Management System
+description: API collection for managing movies with CRUD operations
+variables:
+  - key: base_url
+    value: 'http://localhost:9010'

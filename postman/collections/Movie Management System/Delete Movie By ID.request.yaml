@@ -1,0 +1,11 @@
+$kind: http-request
+name: Delete Movie By ID
+method: DELETE
+url: '{{base_url}}/movies/:movieId'
+order: 5000
+headers:
+  - key: Content-Type
+    value: application/json
+pathVariables:
+  - key: movieId
+    value: '1'

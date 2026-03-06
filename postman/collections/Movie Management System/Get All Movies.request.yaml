@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get All Movies
+method: GET
+url: '{{base_url}}/movies/'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
