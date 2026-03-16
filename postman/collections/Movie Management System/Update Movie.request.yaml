@@ -1,22 +1,17 @@
 $kind: http-request
 name: Update Movie
 method: PUT
-url: '{{base_url}}/movies/:movieId'
+url: http://localhost:9010/api/v1/movies/11
 order: 4000
 headers:
-  - key: Content-Type
-    value: application/json
-pathVariables:
-  - key: movieId
-    value: '1'
+  Content-Type: application/json
 body:
   type: json
-  content: |-
+  content: >-
     {
-      "title": "Inception",
-      "year": 2010,
-      "genre": "Sci-Fi / Thriller",
-      "director": "Christopher Nolan",
-      "plot": "A skilled thief is offered a chance to have his criminal record erased if he can successfully perform inception.",
-      "imdb_rating": 8.8
+        "title": "Love is in the air",
+        "year": 2022,
+        "genre": "Romance",
+        "director": "Sanja Simic",
+        "plot": "Tve movie about two love birds falling in love over and over again"
     }

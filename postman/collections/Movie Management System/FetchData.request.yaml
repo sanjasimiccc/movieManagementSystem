@@ -1,0 +1,5 @@
+$kind: http-request
+name: FetchData
+url: ""
+method: GET
+order: 2580123950778455

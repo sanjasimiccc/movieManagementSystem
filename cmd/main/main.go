@@ -5,19 +5,28 @@ package main
 
 import (
 	"log"
-	"net/http"
 
-	"github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 
 	//mora i da importujem rute!
-	"github.com/sanjasimiccc/movieManagementSystem/pkg/routes"
+	"github.com/sanjasimiccc/movieManagementSystem/cmd/api"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/config"
 )
 
 func main() {
-	r := mux.NewRouter() //prom r koja ce inicijalizovati ruter
-	routes.RegisterMovieStoreRoutes(r)
-	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe("localhost:9010", r)) //ListenAndServe funkcija nam pomaze da kreiramo server, a prosledjujemo joj adresu i port na kome hocemo da pokrenemo server
+	//inicijalizacija DB konekcije
+	config.Connect()
+	db := config.GetDB()
+
+	//migracija
+	config.Migrate()
+
+	//kreiranje servera
+	server := api.NewAPIServer(":9010", db)
+
+	//pokretanje servera
+	if err := server.Run(); err != nil {
+		log.Fatal(err)
+	}
 
 }
