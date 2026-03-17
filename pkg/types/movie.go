@@ -10,6 +10,7 @@ type MovieService interface {
 	UpdateMovie(id int64, payload UpdateMoviePayloadPUT) (*Movie, error)
 	PatchMovie(id int64, payload PatchMoviePayload) (*Movie, error)
 	SearchMovies(params MovieSearchAndFilterParams) ([]Movie, error)
+	FetchAndStoreMovies() ([]Movie, error)
 }
 
 type MovieStore interface {
@@ -18,6 +19,7 @@ type MovieStore interface {
 
 	DeleteMovie(id int64) error
 	CreateMovie(movie Movie) (*Movie, error)
+	CreateMovies(movies []Movie) error
 	UpdateMovie(id int64, movie Movie) (*Movie, error)
 	UpdateMovieFields(id int64, updates map[string]any) (*Movie, error)
 	SearchMovies(params MovieSearchAndFilterParams) ([]Movie, error)
@@ -27,14 +29,14 @@ type MovieStore interface {
 type Movie struct {
 	gorm.Model
 	//ID         int       `gorm:"" json:"id"`
-	Title      string   `gorm:"" json:"title"`
-	Year       int      `json:"year"`
-	Genre      string   `json:"genre"`
-	Director   string   `json:"director"`
-	Plot       string   `json:"plot"`
-	IMDBRating *float64 `json:"imdb_rating"`
-	ExternalID *string  `json:"external_id"`
-	Source     *string  `json:"source"` //odakle su podaci il mi to ne treba?
+	Title      string  `gorm:"" json:"title"`
+	Year       int     `json:"year"`
+	Genre      string  `json:"genre"`
+	Director   string  `json:"director"`
+	Plot       string  `json:"plot"`
+	IMDBRating float64 `json:"imdb_rating"`
+	ExternalID string  `json:"external_id"`
+	Source     string  `json:"source"` //odakle su podaci il mi to ne treba?
 	//CreatedAt  time.Time `json:"created_at"`
 }
 
@@ -70,4 +72,10 @@ type MovieSearchAndFilterParams struct { //ne treba mi json jer su parametri iz 
 
 	Page  int
 	Limit int
+}
+
+type FetchResult struct {
+	Source string
+	ID     string
+	Data   string
 }

@@ -29,6 +29,20 @@ func (s *Store) CreateMovie(movie types.Movie) (*types.Movie, error) { //we rece
 	return &movie, nil
 }
 
+func (s *Store) CreateMovies(movies []types.Movie) error {
+	if len(movies) == 0 {
+		return nil
+	}
+
+	result := s.db.Create(&movies) // batch insert
+	if result.Error != nil {
+		return result.Error
+	}
+
+	fmt.Println("Rows affected:", result.RowsAffected)
+	return nil
+}
+
 func (s *Store) GetAllMovies() ([]types.Movie, error) { //vracam slice/listu
 	var movies []types.Movie
 	result := s.db.Find(&movies) // SELECT * FROM users;

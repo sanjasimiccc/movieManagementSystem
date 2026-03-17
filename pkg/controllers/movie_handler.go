@@ -1,18 +1,14 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
-	"sync"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
-	"github.com/sanjasimiccc/movieManagementSystem/pkg/utils"
+	utils "github.com/sanjasimiccc/movieManagementSystem/pkg/utils/json"
 )
 
 type MovieHandler struct {
@@ -32,7 +28,7 @@ func (h *MovieHandler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/movies/{movieId}", h.UpdateMoviePartially).Methods("PATCH")
 	router.HandleFunc("/movies/{movieId}", h.DeleteMovieById).Methods("DELETE")
 	router.HandleFunc("/movies/search/", h.SearchMovies).Methods("GET")
-	router.HandleFunc("/movies/fetchData/", h.FetchMovieData).Methods("GET") //POST
+	router.HandleFunc("/movies/fetchData/", h.FetchData).Methods("POST")
 }
 
 func (h *MovieHandler) GetMovies(w http.ResponseWriter, r *http.Request) {
@@ -240,94 +236,12 @@ func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, movies)
 }
 
-func (h *MovieHandler) FetchMovieData(w http.ResponseWriter, r *http.Request) {
-	ids := []string{"tt0111161", "tt0137523"}
-
-	type Result struct {
-		Source string
-		ID     string
-		Data   string
-	}
-
-	results := make(chan Result)
-	var wg sync.WaitGroup //kaze Main gorutini da saceka da sve gorutine zavrse posao pre nego sto nastavi dalje
-
-	for _, id := range ids {
-		wg.Add(2) //postavlja broj gorutina i thread-ova koje main thread treba da ceka. Uvecava brojac za prosledjenu vrednost
-
-		//OMDb gorutina
-		go func(movieID string) {
-			fmt.Println("OMDb start", movieID)
-			defer wg.Done() //kada gorutina zavrsi posao, mora reci da je zavrsila sa wg.Done(), to smanjuje brojac u WaitGroup za 1
-			//defer znaci odlozi izvrsenje funkcije do kraja trenutne funkcije. Kada gorutina zavrsi posao ili se desi greska, wg.Done() ce biti automatski pozvan
-			time.Sleep(5 * time.Second)
-			data := fetchOMDb(movieID)
-			fmt.Println("omdb Sending result to channel:", movieID)
-			results <- Result{Source: "OMDb", ID: movieID, Data: data}
-			fmt.Println("OMDb done:", movieID)
-		}(id)
-
-		//TMdb gorutina
-		go func(movieID string) {
-			fmt.Println("TMDb start", movieID)
-			defer wg.Done()
-			time.Sleep(5 * time.Second)
-			data := fetchTMDb(movieID)
-			fmt.Println("tmdb Sending result to channel:", movieID)
-			results <- Result{Source: "TMDb", ID: movieID, Data: data}
-			fmt.Println("TMDb done:", movieID)
-		}(id)
-	}
-
-	//gorutina koja zatvara kanal kada su sve gorutine zavrsile
-	go func() {
-		wg.Wait()
-		fmt.Println("All goroutines finished, closing channel")
-		close(results)
-	}()
-
-	// //ispis rezultata u konzolu
-	// for res := range results {
-	// 	fmt.Printf("Result from source %s for movie %s:\n%s\n\n", res.Source, res.ID, res.Data)
-	// }
-
-	var allResults []Result
-	for res := range results {
-		fmt.Printf("Result from source %s for movie %s:\n%s\n\n", res.Source, res.ID, res.Data)
-		allResults = append(allResults, res)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(allResults); err != nil {
-		fmt.Println("Error encoding JSON:", err)
-	}
-}
-
-func fetchOMDb(id string) string {
-	apiKey := "5257cb6d" //skloni ga u .env ili posto ti sale reko da koriste .json, njega koristi
-	url := fmt.Sprintf("http://www.omdbapi.com/?i=%s&apikey=%s", id, apiKey)
-
-	resp, err := http.Get(url)
+func (h *MovieHandler) FetchData(w http.ResponseWriter, r *http.Request) {
+	movies, err := h.service.FetchAndStoreMovies()
 	if err != nil {
-		return fmt.Sprintf("error: %v", err)
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
 	}
-	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
-	return string(body)
-}
-
-func fetchTMDb(id string) string {
-	apiKey := "081ceea64560bb90d333e9fb727f1927"
-	url := fmt.Sprintf("https://api.themoviedb.org/3/movie/%s?api_key=%s", id, apiKey)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	return string(body)
+	utils.WriteJSON(w, http.StatusOK, movies)
 }
