@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
-	utils "github.com/sanjasimiccc/movieManagementSystem/pkg/utils/json"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/utils"
 )
 
 type MovieHandler struct {
@@ -32,7 +32,12 @@ func (h *MovieHandler) RegisterRoutes(router *mux.Router) {
 
 func (h *MovieHandler) GetMovies(w http.ResponseWriter, r *http.Request) {
 
-	movies, err := h.service.GetAllMovies()
+	page, limit, err := utils.ParsePaginationParams(r)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+	}
+
+	movies, err := h.service.GetAllMovies(page, limit)
 
 	if err != nil {
 		utils.WriteError(w, http.StatusInternalServerError, err)
@@ -55,7 +60,11 @@ func (h *MovieHandler) GetMovieById(w http.ResponseWriter, r *http.Request) {
 	movieDetails, err := h.service.GetMovieById(id)
 
 	if err != nil {
-		utils.WriteError(w, http.StatusNotFound, err)
+		if errors.Is(err, types.ErrMovieNotFound) {
+			utils.WriteError(w, http.StatusNotFound, err)
+		} else {
+			utils.WriteError(w, http.StatusInternalServerError, err)
+		}
 		return
 	}
 	utils.WriteJSON(w, http.StatusOK, movieDetails)
@@ -186,44 +195,10 @@ func (h *MovieHandler) UpdateMoviePartially(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *MovieHandler) SearchMovies(w http.ResponseWriter, r *http.Request) {
-	// citanje query parametara
-	query := r.URL.Query()
-
-	params := types.MovieSearchAndFilterParams{
-		//postavi default vrednosti
-		Page:  1,
-		Limit: 2,
-	}
-	if title := query.Get("title"); title != "" {
-		params.Title = &title
-	}
-	if genre := query.Get("genre"); genre != "" {
-		params.Genre = &genre
-	}
-	if director := query.Get("director"); director != "" {
-		params.Director = &director
-	}
-	if yearStr := query.Get("year"); yearStr != "" {
-		year, err := strconv.Atoi(yearStr)
-		if err == nil {
-			params.Year = &year
-		}
-	}
-
-	if pageStr := query.Get("page"); pageStr != "" {
-		page, err := strconv.Atoi(pageStr)
-		if err == nil && page > 0 {
-			params.Page = page
-			fmt.Println(page)
-		}
-	}
-
-	if limitStr := query.Get("limit"); limitStr != "" {
-		limit, err := strconv.Atoi(limitStr)
-		if err == nil && limit > 0 {
-			params.Limit = limit
-			fmt.Println(limit)
-		}
+	params, err := utils.ParseMovieSearchParams(r)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	movies, err := h.service.SearchMovies(params)

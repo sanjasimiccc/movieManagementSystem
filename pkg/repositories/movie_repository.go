@@ -43,25 +43,30 @@ func (s *Store) CreateMovies(movies []types.Movie) error {
 	return nil
 }
 
-func (s *Store) GetAllMovies() ([]types.Movie, error) { //vracam slice/listu
+func (s *Store) GetAllMovies(page int, limit int) ([]types.Movie, error) {
 	var movies []types.Movie
-	result := s.db.Find(&movies) // SELECT * FROM users;
-	if err := result.Error; err != nil {
-		return nil, err
+
+	offset := (page - 1) * limit
+	result := s.db.
+		Limit(limit).
+		Offset(offset).
+		Find(&movies)
+
+	if result.Error != nil {
+		return nil, fmt.Errorf("failed to fetch movies: %w", result.Error)
 	}
 	return movies, nil
 }
 
 func (s *Store) GetMovieById(id int64) (*types.Movie, error) {
 	var movie types.Movie
-	result := s.db.Where("ID=?", id).Find(&movie)
+	//result := s.db.Where("ID=?", id).Find(&movie)
+	result := s.db.First(&movie, id)
 
-	if err := result.Error; err != nil {
-		return nil, err
-	}
-
-	if movie.ID == 0 {
-		return nil, fmt.Errorf("movie not found")
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return nil, types.ErrMovieNotFound
+	} else if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return &movie, nil
@@ -140,7 +145,10 @@ func (s *Store) SearchMovies(params types.MovieSearchAndFilterParams) ([]types.M
 	}
 
 	offset := (params.Page - 1) * params.Limit
-	result := db.Offset(offset).Limit(params.Limit).Find(&movies)
+	result := db.
+		Offset(offset).
+		Limit(params.Limit).
+		Find(&movies)
 
 	if result.Error != nil {
 		return nil, result.Error

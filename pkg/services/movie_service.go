@@ -8,7 +8,7 @@ import (
 
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/external"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
-	utils "github.com/sanjasimiccc/movieManagementSystem/pkg/utils/json"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/utils"
 )
 
 type MovieService struct {
@@ -58,8 +58,8 @@ func (s *MovieService) GetMovieById(id int64) (*types.Movie, error) {
 	return movie, nil
 }
 
-func (s *MovieService) GetAllMovies() ([]types.Movie, error) {
-	movies, err := s.repo.GetAllMovies()
+func (s *MovieService) GetAllMovies(page int, limit int) ([]types.Movie, error) {
+	movies, err := s.repo.GetAllMovies(page, limit)
 
 	if err != nil {
 		return nil, err
@@ -137,7 +137,6 @@ func (s *MovieService) SearchMovies(params types.MovieSearchAndFilterParams) ([]
 		params.Limit = 10
 	}
 
-	//radi sigurnosti
 	if params.Limit > 100 {
 		params.Limit = 100
 	}

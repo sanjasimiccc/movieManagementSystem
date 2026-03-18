@@ -3,7 +3,7 @@ package types
 import "github.com/jinzhu/gorm"
 
 type MovieService interface {
-	GetAllMovies() ([]Movie, error)
+	GetAllMovies(page int, limit int) ([]Movie, error)
 	CreateMovie(payload CreateMoviePayload) (*Movie, error)
 	GetMovieById(id int64) (*Movie, error)
 	DeleteMovieById(id int64) error
@@ -15,7 +15,7 @@ type MovieService interface {
 
 type MovieStore interface {
 	GetMovieById(id int64) (*Movie, error)
-	GetAllMovies() ([]Movie, error)
+	GetAllMovies(page int, limit int) ([]Movie, error)
 
 	DeleteMovie(id int64) error
 	CreateMovie(movie Movie) (*Movie, error)
@@ -70,6 +70,11 @@ type MovieSearchAndFilterParams struct { //ne treba mi json jer su parametri iz 
 	Director *string
 	Year     *int
 
+	Page  int
+	Limit int
+}
+
+type PaginationParams struct {
 	Page  int
 	Limit int
 }
