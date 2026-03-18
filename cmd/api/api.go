@@ -7,6 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/sanjasimiccc/movieManagementSystem/middleware"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/controllers"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/external"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/repositories"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/services"
 )
@@ -31,7 +32,8 @@ func (s *APIServer) Run() error {
 
 	//svaki put kad hocemo da registrujemo rute, dodjemo ovde i REGISTRUJEMO NOVI SERVIS!!
 	movieStore := repositories.NewStore(s.db) //pozivam konstruktor za store i prosledjujem pravi pointer ka bazi
-	movieService := services.NewService(movieStore)
+	movieProviderFactory := external.NewProviderFactory()
+	movieService := services.NewService(movieStore, movieProviderFactory)
 	movieHandler := controllers.NewHandler(movieStore, movieService) //pozivam handle konstruktor gde sad prosledjujem ovaj konkretni store koji bi trebao da implementira sve metode interfejsa
 	movieHandler.RegisterRoutes(subrouter)
 

@@ -35,8 +35,8 @@ type Movie struct {
 	Director   string  `json:"director"`
 	Plot       string  `json:"plot"`
 	IMDBRating float64 `json:"imdb_rating"`
-	ExternalID string  `json:"external_id"`
-	Source     string  `json:"source"` //odakle su podaci il mi to ne treba?
+	ExternalID string  `gorm:"uniqueIndex:idx_external_source" json:"external_id"`
+	Source     string  `gorm:"uniqueIndex:idx_external_source" json:"source"`
 	//CreatedAt  time.Time `json:"created_at"`
 }
 
@@ -78,4 +78,28 @@ type FetchResult struct {
 	Source string
 	ID     string
 	Data   string
+}
+
+type MovieProvider interface {
+	FetchMovie(id string) (Movie, error)
+}
+
+type OMDbFetchData struct {
+	Title      string `json:"Title"`
+	Year       string `json:"Year"`
+	Genre      string `json:"Genre"`
+	Director   string `json:"Director"`
+	Plot       string `json:"Plot"`
+	IMDBRating string `json:"imdbRating"`
+}
+
+type TMDbFetchData struct {
+	Title  string `json:"title"`
+	Year   string `json:"release_date"`
+	Genres []struct {
+		Name string `json:"name"`
+	} `json:"genres"`
+	Director string  `json:"director"` // TMDb možda nema direktno, ostaviti prazno ili kasnije fetch-ovati crew
+	Plot     string  `json:"overview"`
+	Rating   float64 `json:"vote_average"`
 }
