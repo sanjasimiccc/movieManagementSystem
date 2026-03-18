@@ -68,12 +68,7 @@ func (s *MovieService) GetAllMovies(page int, limit int) ([]types.Movie, error) 
 }
 
 func (s *MovieService) DeleteMovieById(id int64) error {
-	err := s.repo.DeleteMovie(id)
-
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.repo.DeleteMovie(id)
 }
 
 func (s *MovieService) UpdateMovie(id int64, payload types.UpdateMoviePayloadPUT) (*types.Movie, error) {
@@ -82,13 +77,13 @@ func (s *MovieService) UpdateMovie(id int64, payload types.UpdateMoviePayloadPUT
 		return nil, validationErr
 	}
 
-	// exists, err := s.repo.ExistsMovie(payload.Title, payload.Director)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// if exists {
-	// 	return nil, types.ErrMovieAlreadyExists
-	// }
+	exists, err := s.repo.ExistsMovieExcludingID(payload.Title, payload.Director, id)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, types.ErrMovieAlreadyExists
+	}
 
 	movie := types.Movie{
 		Title:    payload.Title,
@@ -105,6 +100,31 @@ func (s *MovieService) PatchMovie(id int64, payload types.PatchMoviePayload) (*t
 	if err := utils.Validate.Struct(payload); err != nil {
 		validationErr := types.ValidationError{Err: err}
 		return nil, validationErr
+	}
+
+	//zbog provere duplikata
+	existingMovie, err := s.repo.GetMovieById(id)
+	if err != nil {
+		return nil, err
+	}
+	title := existingMovie.Title
+	director := existingMovie.Director
+
+	if payload.Title != nil {
+		title = *payload.Title
+	}
+	if payload.Director != nil {
+		director = *payload.Director
+	}
+
+	if payload.Title != nil || payload.Director != nil {
+		exists, err := s.repo.ExistsMovieExcludingID(title, director, id)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, types.ErrMovieAlreadyExists
+		}
 	}
 
 	updates := make(map[string]any)

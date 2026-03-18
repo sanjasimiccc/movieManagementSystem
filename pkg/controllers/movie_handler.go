@@ -81,16 +81,16 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 	movie, err := h.service.CreateMovie(payload)
 
 	if err != nil {
-		if errors.Is(err, types.ErrMovieAlreadyExists) {
-			utils.WriteError(w, http.StatusBadRequest, err)
-			return
-		}
 		var validationErr types.ValidationError
-		if errors.As(err, &validationErr) {
+
+		switch {
+		case errors.Is(err, types.ErrMovieAlreadyExists):
+			utils.WriteError(w, http.StatusConflict, err)
+		case errors.As(err, &validationErr):
 			utils.WriteError(w, http.StatusBadRequest, validationErr)
-			return
+		default:
+			utils.WriteError(w, http.StatusInternalServerError, err)
 		}
-		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -145,10 +145,10 @@ func (h *MovieHandler) UpdateWholeMovie(w http.ResponseWriter, r *http.Request) 
 			utils.WriteError(w, http.StatusNotFound, err)
 			return
 		}
-		// if errors.Is(err, types.ErrMovieAlreadyExists) {
-		// 	utils.WriteError(w, http.StatusBadRequest, err)
-		// 	return
-		// }
+		if errors.Is(err, types.ErrMovieAlreadyExists) {
+			utils.WriteError(w, http.StatusBadRequest, err)
+			return
+		}
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}

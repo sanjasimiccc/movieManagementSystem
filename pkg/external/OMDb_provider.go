@@ -36,6 +36,9 @@ func (o *OMDbProvider) FetchMovie(id string) (types.Movie, error) {
 	year, _ := strconv.Atoi(data.Year)
 	rating, _ := strconv.ParseFloat(data.IMDBRating, 64)
 
+	source := "OMDb"
+	externalID := id
+
 	return types.Movie{
 		Title:      data.Title,
 		Year:       year,
@@ -43,7 +46,7 @@ func (o *OMDbProvider) FetchMovie(id string) (types.Movie, error) {
 		Director:   data.Director,
 		Plot:       data.Plot,
 		IMDBRating: rating,
-		Source:     "OMDb",
-		ExternalID: id,
+		Source:     &source,
+		ExternalID: &externalID,
 	}, nil
 }

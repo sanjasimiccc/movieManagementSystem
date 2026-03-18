@@ -9,7 +9,7 @@ import (
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
 )
 
-var ErrMovieNotFound = errors.New("movie not found")
+// var ErrMovieNotFound = errors.New("movie not found")
 
 type Store struct {
 	db *gorm.DB
@@ -22,7 +22,7 @@ func NewStore(db *gorm.DB) *Store {
 // funkcije za komunikaciju sa bazom!
 func (s *Store) CreateMovie(movie types.Movie) (*types.Movie, error) { //we receive smth of type Movie, and also return that same book that we created
 	result := s.db.Create(&movie)
-	fmt.Println("Rows affected:", result.RowsAffected)
+
 	if err := result.Error; err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (s *Store) GetAllMovies(page int, limit int) ([]types.Movie, error) {
 	result := s.db.
 		Limit(limit).
 		Offset(offset).
-		Find(&movies)
+		Find(&movies) //ignorise soft-deleted zapise
 
 	if result.Error != nil {
 		return nil, fmt.Errorf("failed to fetch movies: %w", result.Error)
@@ -73,13 +73,14 @@ func (s *Store) GetMovieById(id int64) (*types.Movie, error) {
 }
 
 func (s *Store) DeleteMovie(id int64) error {
+	//s.db.Unscoped().Delete(...) --> hard delete
 	result := s.db.Delete(&types.Movie{}, id) //DELETE FROM movies WHERE ID=id;
 	if err := result.Error; err != nil {
 		return err
 	}
 
 	if result.RowsAffected == 0 {
-		return ErrMovieNotFound
+		return types.ErrMovieNotFound
 	}
 
 	return nil
@@ -90,7 +91,7 @@ func (s *Store) UpdateMovie(id int64, movie types.Movie) (*types.Movie, error) {
 	var oldMovie types.Movie
 
 	if err := s.db.First(&oldMovie, id).Error; err != nil {
-		return nil, ErrMovieNotFound
+		return nil, types.ErrMovieNotFound
 	}
 
 	if err := s.db.Model(&oldMovie).Updates(movie).Error; err != nil {
@@ -161,6 +162,16 @@ func (s *Store) ExistsMovie(title string, director string) (bool, error) {
 	var count int64
 	if err := s.db.Model(&types.Movie{}).
 		Where("title = ? AND director = ?", title, director).
+		Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (s *Store) ExistsMovieExcludingID(title string, director string, excludeID int64) (bool, error) {
+	var count int64
+	if err := s.db.Model(&types.Movie{}).
+		Where("title = ? AND director = ? AND id <> ?", title, director, excludeID).
 		Count(&count).Error; err != nil {
 		return false, err
 	}

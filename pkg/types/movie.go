@@ -24,6 +24,7 @@ type MovieStore interface {
 	UpdateMovieFields(id int64, updates map[string]any) (*Movie, error)
 	SearchMovies(params MovieSearchAndFilterParams) ([]Movie, error)
 	ExistsMovie(title string, director string) (bool, error)
+	ExistsMovieExcludingID(title string, director string, excludeID int64) (bool, error)
 }
 
 type Movie struct {
@@ -35,8 +36,8 @@ type Movie struct {
 	Director   string  `json:"director"`
 	Plot       string  `json:"plot"`
 	IMDBRating float64 `json:"imdb_rating"`
-	ExternalID string  `gorm:"uniqueIndex:idx_external_source" json:"external_id"`
-	Source     string  `gorm:"uniqueIndex:idx_external_source" json:"source"`
+	ExternalID *string `gorm:"uniqueIndex:idx_external_source" json:"external_id"`
+	Source     *string `gorm:"uniqueIndex:idx_external_source" json:"source"`
 	//CreatedAt  time.Time `json:"created_at"`
 }
 

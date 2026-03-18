@@ -19,7 +19,6 @@ func NewTMDbProvider(apiKey string) *TMDbProvider {
 }
 
 func (t *TMDbProvider) FetchMovie(id string) (types.Movie, error) {
-	//apiKey := "5257cb6d" //skloni ga u .env ili posto ti sale reko da koriste .json, njega koristi
 	url := fmt.Sprintf("https://api.themoviedb.org/3/movie/%s?api_key=%s", id, t.apiKey)
 
 	resp, err := http.Get(url)
@@ -44,6 +43,9 @@ func (t *TMDbProvider) FetchMovie(id string) (types.Movie, error) {
 		genres = append(genres, g.Name)
 	}
 
+	source := "TMDb"
+	externalID := id
+
 	return types.Movie{
 		Title:      data.Title,
 		Year:       year,
@@ -51,7 +53,7 @@ func (t *TMDbProvider) FetchMovie(id string) (types.Movie, error) {
 		Director:   "Unknown",
 		Plot:       data.Plot,
 		IMDBRating: data.Rating,
-		Source:     "TMDb",
-		ExternalID: id,
+		Source:     &source,
+		ExternalID: &externalID,
 	}, nil
 }
