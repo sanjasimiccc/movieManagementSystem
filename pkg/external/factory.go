@@ -3,6 +3,7 @@ package external
 import (
 	"fmt"
 
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/config"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
 )
 
@@ -13,8 +14,8 @@ type ProviderFactory struct {
 func NewProviderFactory() *ProviderFactory {
 	return &ProviderFactory{
 		providers: map[string]types.MovieProvider{
-			"OMDb": NewOMDbProvider("5257cb6d"),
-			"TMDb": NewTMDbProvider("081ceea64560bb90d333e9fb727f1927"),
+			"OMDb": NewOMDbProvider(config.Envs.OMDbAPIKey),
+			"TMDb": NewTMDbProvider(config.Envs.TMDbAPIKey),
 		},
 	}
 }

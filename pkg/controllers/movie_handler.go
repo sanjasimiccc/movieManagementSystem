@@ -12,12 +12,11 @@ import (
 )
 
 type MovieHandler struct {
-	store   types.MovieStore
 	service types.MovieService
 }
 
-func NewHandler(store types.MovieStore, service types.MovieService) *MovieHandler {
-	return &MovieHandler{store: store, service: service}
+func NewHandler(service types.MovieService) *MovieHandler {
+	return &MovieHandler{service: service}
 }
 
 func (h *MovieHandler) RegisterRoutes(router *mux.Router) {

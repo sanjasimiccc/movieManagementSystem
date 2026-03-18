@@ -34,7 +34,7 @@ func (s *APIServer) Run() error {
 	movieStore := repositories.NewStore(s.db) //pozivam konstruktor za store i prosledjujem pravi pointer ka bazi
 	movieProviderFactory := external.NewProviderFactory()
 	movieService := services.NewService(movieStore, movieProviderFactory)
-	movieHandler := controllers.NewHandler(movieStore, movieService) //pozivam handle konstruktor gde sad prosledjujem ovaj konkretni store koji bi trebao da implementira sve metode interfejsa
+	movieHandler := controllers.NewHandler(movieService) //pozivam handle konstruktor gde sad prosledjujem ovaj konkretni store koji bi trebao da implementira sve metode interfejsa
 	movieHandler.RegisterRoutes(subrouter)
 
 	return http.ListenAndServe(s.addr, middleware.APIKeyMiddleware(router))
