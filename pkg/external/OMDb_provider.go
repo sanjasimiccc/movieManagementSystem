@@ -10,15 +10,22 @@ import (
 )
 
 type OMDbProvider struct {
-	apiKey string
+	apiKey  string
+	limiter *DailyLimiter
 }
 
 func NewOMDbProvider(apiKey string) *OMDbProvider {
-	return &OMDbProvider{apiKey: apiKey}
+	return &OMDbProvider{
+		apiKey:  apiKey,
+		limiter: NewDailyLimiter(1000),
+	}
 }
 
 func (o *OMDbProvider) FetchMovie(id string) (types.Movie, error) {
-	//apiKey := "5257cb6d" //skloni ga u .env ili posto ti sale reko da koriste .json, njega koristi
+	if !o.limiter.Allow() {
+		return types.Movie{}, fmt.Errorf("OMDb daily limit reached")
+	}
+
 	url := fmt.Sprintf("http://www.omdbapi.com/?i=%s&apikey=%s", id, o.apiKey)
 
 	resp, err := http.Get(url)
@@ -29,7 +36,7 @@ func (o *OMDbProvider) FetchMovie(id string) (types.Movie, error) {
 	defer resp.Body.Close()
 
 	var data types.OMDbFetchData
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil { //ili Unmarshal
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return types.Movie{}, err
 	}
 

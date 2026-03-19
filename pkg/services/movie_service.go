@@ -1,11 +1,10 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/config"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/external"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/utils"
@@ -165,29 +164,22 @@ func (s *MovieService) SearchMovies(params types.MovieSearchAndFilterParams) ([]
 }
 
 func (s *MovieService) FetchAndStoreMovies() ([]types.Movie, error) {
-	file, err := os.Open("../../movie_sources.json")
+
+	movieSources, err := config.LoadMovieSources(config.Envs.MovieSourcesPath)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
-	var movieSources map[string]string
-	if err := json.NewDecoder(file).Decode(&movieSources); err != nil {
-		return nil, err
-	}
+	results := make(chan types.Movie, len(movieSources))
+	var wg sync.WaitGroup
 
-	results := make(chan types.Movie, len(movieSources)) //buffered channel
-	var wg sync.WaitGroup                                //kaze Main gorutini da saceka da sve gorutine zavrse posao pre nego sto nastavi dalje
-
-	//worker gorutine za svaki film
 	for id, source := range movieSources {
-		wg.Add(1) //postavlja broj gorutina i thread-ova koje main thread treba da ceka. Uvecava brojac za prosledjenu vrednost
+		wg.Add(1)
 
 		go func(movieID string, apiSource string) {
-			defer wg.Done() //kada gorutina zavrsi posao, mora reci da je zavrsila sa wg.Done(), to smanjuje brojac u WaitGroup za 1
-			//defer znaci odlozi izvrsenje funkcije do kraja trenutne funkcije. Kada gorutina zavrsi posao ili se desi greska, wg.Done() ce biti automatski pozvan
+			defer wg.Done()
 
-			movieProvider, err := s.movieProviderFactory.Get(source)
+			movieProvider, err := s.movieProviderFactory.Get(apiSource)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -206,14 +198,12 @@ func (s *MovieService) FetchAndStoreMovies() ([]types.Movie, error) {
 
 	}
 
-	//gorutina koja zatvara kanal kada su sve gorutine zavrsile
 	go func() {
 		wg.Wait()
 		close(results)
 		fmt.Println("All goroutines finished, closing channel")
 	}()
 
-	//mapiranje u Movie struct
 	var movies []types.Movie
 	for movie := range results {
 		movies = append(movies, movie)
@@ -225,9 +215,5 @@ func (s *MovieService) FetchAndStoreMovies() ([]types.Movie, error) {
 		}
 	}
 
-	// //batch insert u bazu
-	// if err := s.repo.CreateMovies(movies); err != nil {
-	// 	return nil, err
-	// }
 	return movies, nil
 }

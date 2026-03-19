@@ -9,8 +9,6 @@ import (
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
 )
 
-// var ErrMovieNotFound = errors.New("movie not found")
-
 type Store struct {
 	db *gorm.DB
 }
@@ -19,7 +17,6 @@ func NewStore(db *gorm.DB) *Store {
 	return &Store{db: db}
 }
 
-// funkcije za komunikaciju sa bazom!
 func (s *Store) CreateMovie(movie types.Movie) (*types.Movie, error) { //we receive smth of type Movie, and also return that same book that we created
 	result := s.db.Create(&movie)
 
