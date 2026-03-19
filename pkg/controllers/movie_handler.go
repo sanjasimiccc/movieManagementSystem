@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/types"
@@ -48,12 +47,9 @@ func (h *MovieHandler) GetMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) GetMovieById(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r) //da bismo pristupili movieId-ju koji je i okviru request-a; za trenutni request vraca promenljive iz rute
-	movieId := vars["movieId"]
-
-	id, err := strconv.ParseInt(movieId, 10, 64) //ili strconv.Atoin(movieId)
+	id, err := utils.ParseIDParam(r, "movieId")
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid movie id"))
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -98,12 +94,9 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) DeleteMovieById(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	movieId := vars["movieId"]
-
-	id, err := strconv.ParseInt(movieId, 10, 64)
+	id, err := utils.ParseIDParam(r, "movieId")
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid movie id"))
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -118,17 +111,13 @@ func (h *MovieHandler) DeleteMovieById(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, map[string]string{
-		"message": "movie deleted successfully",
-	})
+	utils.WriteJSON(w, http.StatusOK, fmt.Errorf("movie deleted successfully"))
 }
 
 func (h *MovieHandler) UpdateWholeMovie(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	movieIDStr := vars["movieId"]
-	movieIDInt, err := strconv.ParseInt(movieIDStr, 10, 64)
+	id, err := utils.ParseIDParam(r, "movieId")
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid movie id"))
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -138,7 +127,7 @@ func (h *MovieHandler) UpdateWholeMovie(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	movie, err := h.service.UpdateMovie(movieIDInt, moviePayload)
+	movie, err := h.service.UpdateMovie(id, moviePayload)
 
 	if err != nil {
 		if errors.Is(err, types.ErrMovieNotFound) {
@@ -157,13 +146,9 @@ func (h *MovieHandler) UpdateWholeMovie(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *MovieHandler) UpdateMoviePartially(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["movieId"]
-
-	idInt, err := strconv.ParseInt(idStr, 10, 64)
-
+	id, err := utils.ParseIDParam(r, "movieId")
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid movie id"))
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -173,7 +158,7 @@ func (h *MovieHandler) UpdateMoviePartially(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	movie, err := h.service.PatchMovie(idInt, moviePayload)
+	movie, err := h.service.PatchMovie(id, moviePayload)
 
 	if err != nil {
 		var validationErr types.ValidationError
