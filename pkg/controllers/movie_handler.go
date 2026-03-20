@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -111,7 +110,7 @@ func (h *MovieHandler) DeleteMovieById(w http.ResponseWriter, r *http.Request) {
 		utils.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
-	utils.WriteJSON(w, http.StatusOK, fmt.Errorf("movie deleted successfully"))
+	utils.WriteJSON(w, http.StatusOK, map[string]string{"message": "movie deleted successfully"})
 }
 
 func (h *MovieHandler) UpdateWholeMovie(w http.ResponseWriter, r *http.Request) {

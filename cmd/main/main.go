@@ -11,18 +11,24 @@ import (
 	//mora i da importujem rute!
 	"github.com/sanjasimiccc/movieManagementSystem/cmd/api"
 	"github.com/sanjasimiccc/movieManagementSystem/pkg/config"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/controllers"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/external"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/repositories"
+	"github.com/sanjasimiccc/movieManagementSystem/pkg/services"
 )
 
 func main() {
-	//inicijalizacija DB konekcije
 	config.Connect()
 	db := config.GetDB()
-
-	//migracija
 	config.Migrate()
 
+	movieStore := repositories.NewStore(db)
+	movieProviderFactory := external.NewProviderFactory()
+	movieService := services.NewService(movieStore, movieProviderFactory)
+	movieHandler := controllers.NewHandler(movieService)
+
 	//kreiranje servera
-	server := api.NewAPIServer(":9010", db)
+	server := api.NewAPIServer(":9010", movieHandler)
 
 	//pokretanje servera
 	if err := server.Run(); err != nil {

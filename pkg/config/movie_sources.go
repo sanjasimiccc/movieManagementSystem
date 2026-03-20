@@ -5,8 +5,8 @@ import (
 	"os"
 )
 
-func LoadMovieSources(path string) (map[string]string, error) {
-	file, err := os.Open(path)
+func LoadMovieSources() (map[string]string, error) {
+	file, err := os.Open(Envs.MovieSourcesPath)
 	if err != nil {
 		return nil, err
 	}

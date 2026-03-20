@@ -164,8 +164,7 @@ func (s *MovieService) SearchMovies(params types.MovieSearchAndFilterParams) ([]
 }
 
 func (s *MovieService) FetchAndStoreMovies() ([]types.Movie, error) {
-
-	movieSources, err := config.LoadMovieSources(config.Envs.MovieSourcesPath)
+	movieSources, err := config.LoadMovieSources()
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +191,7 @@ func (s *MovieService) FetchAndStoreMovies() ([]types.Movie, error) {
 			}
 
 			results <- movie
-			fmt.Printf("%s done %s\n", source, movieID)
+			fmt.Printf("%s done %s\n", apiSource, movieID)
 
 		}(id, source)
 
